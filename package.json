@@ -7,5 +7,9 @@
     "test": "node run.js"
   },
   "author": "@stewartknapman",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "js-yaml": "^3.4.3",
+    "request": "^2.65.0"
+  }
 }

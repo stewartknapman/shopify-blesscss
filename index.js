@@ -3,10 +3,13 @@ var yaml = require('js-yaml');
 var bless = require('bless');
 var request = require('request');
 
-var Blessify = function (config_path, stylesheet_name, output_path, output_filename) {
+var Blessify = function (config_path, stylesheet_name, output_path, output_filename, callback) {
   this.stylesheet_name = stylesheet_name;
   this.output_path = output_path;
+  this.callback = callback;
   this.output_filename = output_filename || 'styles_ie_';
+  this.output_files = [];
+  
   this.config = this._get_config(config_path);
   this.asset_url = this._build_asst_url();
 
@@ -64,9 +67,14 @@ Blessify.prototype._request_stylesheet = function (asset_path) {
 Blessify.prototype._bless_stylesheet = function (css) {
   var _this = this;
   var blessed = this.bless.parse(css, function (err, files, numSelectors) {
-    console.log('Selectors: '+numSelectors, 'Files: '+files.length);
+    console.log('[Blessify] Selectors: '+numSelectors, 'Files: '+files.length);
     _this._output_stylesheets(files);
-    console.log('Blessify Complete');
+    
+    if (_this.callback) {
+      _this.callback.apply(_this, [_this.output_files]);
+    }
+    
+    console.log('[Blessify] Complete');
   });
 };
 
@@ -77,8 +85,20 @@ Blessify.prototype._output_stylesheets = function (files) {
 };
 
 Blessify.prototype._output_stylesheet = function (file, i) {
-  var file_path = this._build_output_path() + this.output_filename + (i+1) + '.css';
-  fs.writeFileSync(file_path, file, 'utf8');
+  var filename = this._get_output_filename(i);
+  fs.writeFileSync(filename, file, 'utf8');
+};
+
+Blessify.prototype._get_output_filename = function (i) {
+  var filename = this.output_filename + (i+1) + '.css';
+  var filepath = this._build_output_path() + filename;
+  var fileobj = {
+    filename: filename,
+    filepath: filepath
+  };
+  
+  this.output_files.push(fileobj);
+  return fileobj.filepath;
 };
 
 Blessify.prototype._build_output_path = function () {

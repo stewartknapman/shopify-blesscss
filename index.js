@@ -3,9 +3,10 @@ var yaml = require('js-yaml');
 var bless = require('bless');
 var request = require('request');
 
-var Blessify = function (config_path, stylesheet_name, output_path) {
+var Blessify = function (config_path, stylesheet_name, output_path, output_filename) {
   this.stylesheet_name = stylesheet_name;
   this.output_path = output_path;
+  this.output_filename = output_filename || 'styles_ie_';
   this.config = this._get_config(config_path);
   this.asset_url = this._build_asst_url();
 
@@ -61,11 +62,32 @@ Blessify.prototype._request_stylesheet = function (asset_path) {
 };
 
 Blessify.prototype._bless_stylesheet = function (css) {
+  var _this = this;
   var blessed = this.bless.parse(css, function (err, files, numSelectors) {
-    
-    console.log(numSelectors, files.length);
-    
+    console.log('Selectors: '+numSelectors, 'Files: '+files.length);
+    _this._output_stylesheets(files);
+    console.log('Blessify Complete');
   });
+};
+
+Blessify.prototype._output_stylesheets = function (files) {
+  for (var i = 0; i < files.length; i++) {
+    this._output_stylesheet(files[i].content, i);
+  }
+};
+
+Blessify.prototype._output_stylesheet = function (file, i) {
+  var file_path = this._build_output_path() + this.output_filename + (i+1) + '.css';
+  fs.writeFileSync(file_path, file, 'utf8');
+};
+
+Blessify.prototype._build_output_path = function () {
+  if (this.output_path.length > 0) {
+    if (this.output_path[this.output_path.length - 1] !== '/') this.output_path = this.output_path + '/';
+    return this.output_path;
+  } else {
+    return '';
+  }
 };
 
 module.exports = Blessify;

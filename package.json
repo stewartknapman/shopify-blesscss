@@ -9,6 +9,7 @@
   "author": "@stewartknapman",
   "license": "ISC",
   "dependencies": {
+    "bless": "^3.0.3",
     "js-yaml": "^3.4.3",
     "request": "^2.65.0"
   }
